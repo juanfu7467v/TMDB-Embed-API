@@ -1,57 +1,38 @@
-# ---------- Build Stage ----------
-FROM node:20-alpine AS build
-ARG VERSION=dev
-WORKDIR /app
-
-# Solo copiamos package.json porque package-lock.json no existe en este repo
-COPY package.json ./
-
-# Instalamos dependencias omitiendo las de desarrollo
-RUN npm install --omit=dev
-
-# Copiamos TODO el código fuente, incluyendo la carpeta proxy
-COPY apiServer.js ./
-COPY providers ./providers
-COPY public ./public
-COPY utils ./utils
-COPY proxy ./proxy
-COPY README.md ./
-
-# ---------- Runtime Stage ----------
-FROM node:20-alpine AS runtime
-ARG VERSION=dev
-WORKDIR /app
-ENV NODE_ENV=production \
-    API_PORT=8787 \
-    BIND_HOST=0.0.0.0 \
-    APP_VERSION=${VERSION}
-
-# Crear usuario sin privilegios para mayor seguridad
-RUN addgroup -S app && adduser -S app -G app
-
-# Copiamos lo necesario desde la etapa de construcción
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apiServer.js ./
-COPY --from=build /app/public ./public
-COPY --from=build /app/providers ./providers
-COPY --from=build /app/utils ./utils
-COPY --from=build /app/proxy ./proxy
-COPY --from=build /app/package.json ./
-COPY --from=build /app/README.md ./
-
-# Exponemos el puerto correcto
-EXPOSE 8787
-
-# Ajustamos permisos para el usuario 'app'
-RUN chown -R app:app /app
-USER app
-
-# Metadatos del contenedor
-LABEL org.opencontainers.image.title="TMDB Embed API" \
-    org.opencontainers.image.description="Streaming metadata + source aggregation API" \
-    org.opencontainers.image.version="${VERSION}"
-
-# Healthcheck usando el puerto 8787
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD wget -qO- http://localhost:8787/api/health || exit 1
-
-CMD ["node","apiServer.js"]
+{
+  "name": "tmdb-embed-api",
+  "version": "1.0.9",
+  "description": "Standalone streaming embed source aggregation API (TMDB ID in, streams out)",
+  "main": "apiServer.js",
+  "scripts": {
+    "start": "nodemon --watch restart.trigger apiServer.js",
+    "start:dev": "nodemon --watch restart.trigger --ignore providers/.cache --ignore **/cache apiServer.js",
+    "lint": "eslint . --ext .js"
+  },
+  "dependencies": {
+    "aromanize": "^0.1.5",
+    "axios": "^1.9.0",
+    "axios-cookiejar-support": "^6.0.2",
+    "body-parser": "^2.2.0",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "form-data": "^4.0.3",
+    "hls-parser": "^0.13.5",
+    "jsdom": "^26.1.0",
+    "node-fetch": "^2.7.0",
+    "p-limit": "^6.2.0",
+    "string-similarity": "^4.0.4",
+    "tough-cookie": "^5.1.2",
+    "ttl-cache": "^1.0.2",
+    "yargs": "^17.7.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "nodemon": "^3.1.10"
+  }
+}
