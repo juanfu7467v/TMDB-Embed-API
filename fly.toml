@@ -11,6 +11,11 @@ primary_region = 'ams'
   min_machines_running = 0
   processes = ['app']
 
+# Esta sección conecta tu volumen persistente a la carpeta de configuración
+[mounts]
+  source = "tmdb_data"
+  destination = "/app/utils"
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
