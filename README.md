@@ -139,6 +139,16 @@ To stop & remove:
 docker compose down
 ```
 
+### Fly.io Deployment
+For Fly.io deployments, ensure your `fly.toml` is configured to mount a persistent volume to `/app/utils`. This directory contains `user-config.json` for general settings and `auth-users.json` for user credentials, both of which need to persist across machine restarts.
+
+Example `fly.toml` volume configuration:
+```toml
+[mounts]
+  source = "tmdb_data" # Name of your Fly.io volume
+  destination = "/app/utils"
+```
+
 ### Switching to Multiple TMDB Keys
 Either set `TMDB_API_KEYS` to a JSON array string:
 ```bash
@@ -170,6 +180,7 @@ docker compose up -d --build
 The Admin panel includes a Restart Server control.
 - Local (nodemon): the backend writes a `restart.trigger` file and exits; nodemon detects the change and restarts automatically.
 - Docker Compose: the container exits and is restarted by `restart: unless-stopped`.
+- Fly.io: the machine exits and is restarted by `auto_stop_machines = 'stop'` and `auto_start_machines = true`.
 ```
 
 ### Healthcheck

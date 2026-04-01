@@ -11,14 +11,9 @@ primary_region = 'ams'
   min_machines_running = 0
   processes = ['app']
 
-# Movimos el destino a /config para no tapar los archivos de /app/utils
 [mounts]
   source = "tmdb_data"
-  destination = "/config"
-
-# Le indicamos a la API que guarde y lea el JSON desde la nueva ruta persistente
-[env]
-  CONFIG_PATH = "/config/user-config.json"
+  destination = "/app/utils"
 
 [[vm]]
   memory = '1gb'
