@@ -42,8 +42,8 @@ COPY --from=build /app/README.md ./
 # Exponemos el puerto correcto
 EXPOSE 8787
 
-# Ajustamos permisos para el usuario 'app'
-RUN chown -R app:app /app
+# Creamos el directorio /data y ajustamos permisos para el usuario 'app'
+RUN mkdir -p /data && chown -R app:app /app /data
 USER app
 
 # Metadatos del contenedor

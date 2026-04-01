@@ -140,13 +140,13 @@ docker compose down
 ```
 
 ### Fly.io Deployment
-For Fly.io deployments, ensure your `fly.toml` is configured to mount a persistent volume to `/app/utils`. This directory contains `user-config.json` for general settings and `auth-users.json` for user credentials, both of which need to persist across machine restarts.
+For Fly.io deployments, ensure your `fly.toml` is configured to mount a persistent volume to `/data`. The application is configured to automatically detect this directory and use it to store `user-config.json` and `auth-users.json` persistently, without interfering with the application's source code.
 
 Example `fly.toml` volume configuration:
 ```toml
 [mounts]
   source = "tmdb_data" # Name of your Fly.io volume
-  destination = "/app/utils"
+  destination = "/data"
 ```
 
 ### Switching to Multiple TMDB Keys

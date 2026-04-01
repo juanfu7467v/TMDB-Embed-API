@@ -2,8 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// Path for auth users file
-const AUTH_FILE = path.join(process.cwd(), 'utils/auth-users.json');
+// Priority for auth users file: 1. /data (Fly.io volume), 2. utils/ (local/Docker)
+const PERSISTENT_DATA_DIR = '/data';
+const AUTH_FILENAME = 'auth-users.json';
+
+function getAuthFilePath() {
+  if (fs.existsSync(PERSISTENT_DATA_DIR)) {
+    return path.join(PERSISTENT_DATA_DIR, AUTH_FILENAME);
+  }
+  return path.join(process.cwd(), 'utils', AUTH_FILENAME);
+}
+
+const AUTH_FILE = getAuthFilePath();
 
 // In-memory cache
 let usersCache = null;
@@ -12,14 +22,36 @@ const LOAD_INTERVAL_MS = 30 * 1000; // reload at most every 30s
 
 function ensureAuthFile() {
   if (fs.existsSync(AUTH_FILE)) return;
+  
+  // If we're in Fly.io but file doesn't exist in /data, try to copy from original utils/ if it exists
+  const fallbackFile = path.join(process.cwd(), 'utils', AUTH_FILENAME);
+  if (AUTH_FILE.startsWith(PERSISTENT_DATA_DIR) && fs.existsSync(fallbackFile)) {
+    try {
+      if (!fs.existsSync(PERSISTENT_DATA_DIR)) fs.mkdirSync(PERSISTENT_DATA_DIR, { recursive: true });
+      fs.copyFileSync(fallbackFile, AUTH_FILE);
+      console.log(`[auth] Migrated auth file from ${fallbackFile} to ${AUTH_FILE}`);
+      return;
+    } catch (e) {
+      console.error('[auth] Failed to migrate auth file:', e.message);
+    }
+  }
+
   const defaultPassword = 'change-me';
   const { hash } = hashPassword(defaultPassword);
   const data = {
     info: 'Initial default credentials. CHANGE THE PASSWORD IMMEDIATELY using /auth/change-password after logging in.',
     users: [ { username: 'admin', hash } ]
   };
-  fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2));
-  console.warn('[auth] Created default auth-users.json with username "admin" and password "change-me". CHANGE IT NOW.');
+  
+  try {
+    if (AUTH_FILE.startsWith(PERSISTENT_DATA_DIR) && !fs.existsSync(PERSISTENT_DATA_DIR)) {
+      fs.mkdirSync(PERSISTENT_DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2));
+    console.warn(`[auth] Created default auth-users.json at ${AUTH_FILE}. CHANGE IT NOW.`);
+  } catch (e) {
+    console.error('[auth] Failed to create default auth file:', e.message);
+  }
 }
 
 function loadUsers(force=false){
