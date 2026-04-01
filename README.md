@@ -102,12 +102,14 @@ Or the minimal quick-test run:
 docker run -it -p 8787:8787 inside4ndroid/tmdb-embed-api:latest
 ```
 
-Persist overrides (Windows PowerShell example) by mounting a local file:
-```powershell
-New-Item -ItemType File -Path .\utils\user-config.json -Force | Out-Null
+Persist overrides and auth data by mounting the `utils` directory:
+```bash
+# Create local directory if it doesn't exist
+mkdir -p utils
+
 docker run --name tmdb-embed-api -p 8787:8787 `
   -e TMDB_API_KEY=YOUR_TMDB_KEY `
-  -v ${PWD}/utils/user-config.json:/app/utils/user-config.json `
+  -v ${PWD}/utils:/app/utils `
   inside4ndroid/tmdb-embed-api:latest
 ```
 
@@ -116,11 +118,11 @@ docker run --name tmdb-embed-api -p 8787:8787 `
 docker build -t tmdb-embed-api .
 docker run --name tmdb-embed -p 8787:8787 \
   -e TMDB_API_KEY=YOUR_TMDB_KEY \
-  -v "$(pwd)/utils/user-config.json:/app/utils/user-config.json" \
+  -v "$(pwd)/utils:/app/utils" \
   tmdb-embed-api
 ```
 
-After first login + save, the UI writes overrides into the mounted `user-config.json` so they persist across container restarts.
+After first login + save, the UI writes overrides and auth changes into the mounted `utils` directory so they persist across container restarts and app updates.
 
 ### docker-compose
 An example `docker-compose.yml` is included. Start with:

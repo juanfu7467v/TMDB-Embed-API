@@ -9,14 +9,14 @@ services:
       # Alternative: supply JSON array
       # - TMDB_API_KEYS=["key1","key2"]
       - API_PORT=8787
-  - BIND_HOST=0.0.0.0
+      - BIND_HOST=0.0.0.0
       # FebBox cookies (comma separated) if you want Showbox immediately functional
       - FEBBOX_COOKIES=${FEBBOX_COOKIES:-}
     ports:
       - "8787:8787"
     volumes:
-      # Persist runtime overrides (created by the admin UI)
-      - user_config_data:/app/utils/user-config.json
+      # Persist runtime overrides and auth data (created by the admin UI)
+      - tmdb_api_data:/app/utils
       # Allow restart trigger file (optional; stored in container FS)
       # - restart_marker:/app/restart.trigger
     restart: unless-stopped
@@ -27,5 +27,5 @@ services:
       start_period: 20s
       retries: 3
 volumes:
-  user_config_data:
+  tmdb_api_data:
   # restart_marker:
