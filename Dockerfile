@@ -39,6 +39,10 @@ COPY --from=build /app/proxy ./proxy
 COPY --from=build /app/package.json ./
 COPY --from=build /app/README.md ./
 
+# Copiamos el script de entrada y le damos permisos de ejecución
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Exponemos el puerto correcto
 EXPOSE 8787
 
@@ -54,4 +58,5 @@ LABEL org.opencontainers.image.title="TMDB Embed API" \
 # Healthcheck usando el puerto 8787
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD wget -qO- http://localhost:8787/api/health || exit 1
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node","apiServer.js"]

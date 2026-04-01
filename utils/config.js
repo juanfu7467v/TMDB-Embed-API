@@ -8,11 +8,8 @@ const PERSISTENT_DATA_DIR = '/data';
 const DATA_FILENAME = 'user-config.json';
 
 function getOverridePath() {
-  // If /data directory exists (mounted volume), use it as primary
-  if (fs.existsSync(PERSISTENT_DATA_DIR)) {
-    return path.join(PERSISTENT_DATA_DIR, DATA_FILENAME);
-  }
-  
+  // We now use symlinks from /app/utils to /data for persistence.
+  // This ensures the app always reads from the same location while the OS handles the redirection.
   const NEW_OVERRIDE_PATH = path.join(process.cwd(), 'utils', DATA_FILENAME);
   const LEGACY_OVERRIDE_PATH = path.join(process.cwd(), DATA_FILENAME);
   
@@ -61,10 +58,6 @@ function readOverrideFile() {
 
 function writeOverrideFile(obj) {
   try {
-    // Ensure directory exists if we're writing to /data
-    if (OVERRIDE_PATH.startsWith(PERSISTENT_DATA_DIR) && !fs.existsSync(PERSISTENT_DATA_DIR)) {
-      fs.mkdirSync(PERSISTENT_DATA_DIR, { recursive: true });
-    }
     fs.writeFileSync(OVERRIDE_PATH, JSON.stringify(obj, null, 2));
     return true;
   } catch (e) {
